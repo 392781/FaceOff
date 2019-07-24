@@ -1,4 +1,4 @@
 *
 !.gitignore
 !fr_pytorch_3.py
-!*/results
+!/results/
