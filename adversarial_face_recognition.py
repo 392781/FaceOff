@@ -2,6 +2,7 @@ import torch.optim as optim
 import torch as t
 import torch.nn as nn
 import torchvision.transforms as transforms
+import dlib
 import numpy as np
 import random as r
 import face_recognition as fr
@@ -9,7 +10,7 @@ from torch import autograd
 from PIL import Image, ImageDraw
 from facenet_pytorch import MTCNN, InceptionResnetV1
 
-
+r.seed(1)
 
 class Normalize(nn.Module):
     """
@@ -92,6 +93,19 @@ def detect_face(image_file_name):
     PIL.Image
         Resized face image
     """
+    detector = dlib.get_frontal_face_detector()
+    shape_predictor = dlib.shape_predictor('./tools/shape_predictor_5_face_landmarks.dat')
+    image = dlib.load_rgb_image(image_file_name)
+    dets = detector(image, 1)
+
+    faces = dlib.full_object_detections()
+    for detection in dets:
+        faces.append(shape_predictor(image, detection))
+
+    return Image.fromarray(dlib.get_face_chip(image, faces[0], size=300))
+
+
+"""
     image = fr.load_image_file(image_file_name)
     face_locations = fr.face_locations(image)
     top, right, bottom, left = face_locations[0]
@@ -99,7 +113,7 @@ def detect_face(image_file_name):
     face_image = Image.fromarray(face_array)
     face_image = face_image.resize(size=(300,300), resample=Image.LANCZOS)
     return face_image
-
+"""
 
 
 def create_mask(face_image, mask_type = 'white'):
@@ -147,7 +161,7 @@ def create_mask(face_image, mask_type = 'white'):
             for k in range(mask_array.shape[2]):
                 # Combo BREAKER
                 if mask_array[i][j][k] < 255.:
-                    mask_array[i][j][k] = 1
+                    mask_array[i][j][k] = 0.5#r.random()
                 else:
                     mask_array[i][j][k] = 0
 
@@ -164,10 +178,10 @@ imagize = transforms.ToPILImage()
 mtcnn = MTCNN()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
-input_image_location =  './faces/john.png'
-target_image_location = './faces/nick.jpg'
-input_test_location =   './faces/john2.jpg'
-target_test_location =  './faces/nick2.jpg'
+input_image_location =  './faces/ronald.jpg'
+target_image_location = './faces/john.jpg'
+input_test_location =   './faces/ronald2.jpg'
+target_test_location =  './faces/john2.jpg'
 
 input_image = detect_face(input_image_location)
 target_image = detect_face(target_image_location)
@@ -178,52 +192,52 @@ mask = create_mask(input_image)
 delta = tensorize(mask)
 delta.requires_grad_(True)
 
-opt = optim.Adam([delta], lr = 1e-2, weight_decay = 0.001)
+opt = optim.Adam([delta], lr = 1e-1, weight_decay = 0.0001)
 
 input_emb = resnet(norm(tensorize(input_image)))
 target_emb = resnet(norm(tensorize(target_image)))
 
 input_tensor = tensorize(input_image)
 
-epochs = 30
+epochs = 45
 
 print(f'\nEpoch |   Loss   | Face Detection')
 print(f'---------------------------------')
 for i in range(epochs):
-    with autograd.detect_anomaly():
-        delta_area = delta #* training_area
-        adver = apply(input_tensor, delta_area)
-        adv = imagize(adver.detach())
-        embedding = resnet(norm(adver))
-        loss = (-emb_distance(embedding, input_emb)
-                +emb_distance(embedding, target_emb))
+    adver = apply(input_tensor, delta)
+    adv = imagize(adver.detach())
+    embedding = resnet(norm(adver))
+    loss = (-emb_distance(embedding, input_emb)
+            +emb_distance(embedding, target_emb))
 
-        if i % 5 == 0 or i == epochs - 1:
-            detection_test = fr.face_locations(np.array(adv))
-            if not detection_test:
-                d = 'Failed'
-            else:
-                d = 'Pass ' + str(detection_test)
-            print(f'{i:5} | {loss.item():8.5f} | {d}')
-            
-            adv.show()
+    if i % 5 == 0 or i == epochs - 1:
+        detection_test = fr.face_locations(np.array(adv))
+        if not detection_test:
+            d = 'Failed'
+        else:
+            d = 'Pass ' + str(detection_test)
+        print(f'{i:5} | {loss.item():8.5f} | {d}')
+        
+        adv.show()
 
-        loss.backward(retain_graph=True)
-        opt.step()
-        opt.zero_grad()
+    loss.backward(retain_graph=True)
+    opt.step()
+    opt.zero_grad()
 
-        delta.data.clamp_(-1, 1)
+    delta.data.clamp_(-1, 1)
 
 temp = detect_face(input_test_location)
 true_emb = resnet(norm(tensorize(temp)))
 temp = detect_face(target_test_location)
 test_emb = resnet(norm(tensorize(temp)))
 
-print("\ninput img vs true img", emb_distance(input_emb, true_emb).item())
-print("input img vs target  ", emb_distance(input_emb, target_emb).item())
-print(" target vs 2nd target", emb_distance(target_emb, test_emb).item())
-print("advr img vs true img ", emb_distance(resnet(norm(apply(input_tensor, delta))), true_emb).item())
-print("advr img vs target   ", emb_distance(resnet(norm(apply(input_tensor, delta))), target_emb).item())
+print("\ninput img vs true img  ", emb_distance(input_emb, true_emb).item())
+print("input img vs target    ", emb_distance(input_emb, target_emb).item())
+print("input img vs 2nd target", emb_distance(input_emb, test_emb).item())
+print(" target vs 2nd target  ", emb_distance(target_emb, test_emb).item())
+print("advr img vs true img   ", emb_distance(resnet(norm(apply(input_tensor, delta))), true_emb).item())
+print("advr img vs target     ", emb_distance(resnet(norm(apply(input_tensor, delta))), target_emb).item())
+print("advr img vs 2nd target ", emb_distance(resnet(norm(apply(input_tensor, delta))), test_emb).item())
 
 imagize(delta.detach()).show()
 imagize(delta.detach()).save('./results/delta.png')
