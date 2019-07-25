@@ -45,11 +45,30 @@ class Normalize(nn.Module):
 
 
 class Applier(nn.Module):
+    """
+    Applies the tensor mask onto the given image
+    """
     def __init__(self):
         super(Applier, self).__init__()
-    def forward(self, img, adv):
-        img = t.where((adv == 0), img, adv)
-        return img
+    def forward(self, image, mask):
+        """
+        Applies a mask on an image
+
+
+        Parameters
+        ----------
+        image : Tensor
+            face tensor
+        mask : Tensor
+            calculated mask tensor
+
+        Returns
+        -------
+        Tensor
+            combined image and mask tensor
+        """
+        image = t.where((image == 0), image, mask)
+        return image
 
 
 
@@ -77,10 +96,9 @@ def emb_distance(tensor_1, tensor_2):
 
 def detect_face(image_file_name):
     """
-    Helper function to run the facial detection process.  Uses the 
-    'face_recognizer' library (which runs dlib's face detector).  This finds
-    the top, right, bottom, left face borders and selects just the given 
-    face, resizes, and resamples the image.
+    Helper function to run the facial detection and alignment process using
+    dlib.  Detects a given face and aligns it using dlib's 5 point landmark
+    detector.
 
 
     Parameters
@@ -103,17 +121,6 @@ def detect_face(image_file_name):
         faces.append(shape_predictor(image, detection))
 
     return Image.fromarray(dlib.get_face_chip(image, faces[0], size=300))
-
-
-"""
-    image = fr.load_image_file(image_file_name)
-    face_locations = fr.face_locations(image)
-    top, right, bottom, left = face_locations[0]
-    face_array = image[top:bottom, left:right]
-    face_image = Image.fromarray(face_array)
-    face_image = face_image.resize(size=(300,300), resample=Image.LANCZOS)
-    return face_image
-"""
 
 
 def create_mask(face_image, mask_type = 'white'):
@@ -170,14 +177,18 @@ def create_mask(face_image, mask_type = 'white'):
 
 ############################ MAIN ############################
 
-
+## Initialization of tools to be used
+## Standard normalization for ImageNet images found here:
+## ttps://github.com/pytorch/examples/blob/master/imagenet/main.py
 norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 apply = Applier()
+## Transformations to be used later
 tensorize = transforms.ToTensor()
 imagize = transforms.ToPILImage()
-mtcnn = MTCNN()
+## FaceNet PyTorch model
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
+## Image preprocessing
 input_image_location =  './faces/ronald.jpg'
 target_image_location = './faces/john.jpg'
 input_test_location =   './faces/ronald2.jpg'
@@ -188,10 +199,12 @@ target_image = detect_face(target_image_location)
 input_image.save('./results/input-face.png')
 target_image.save('./results/target-face.png')
 
+## Mask creation
 mask = create_mask(input_image)
 delta = tensorize(mask)
 delta.requires_grad_(True)
 
+## Optimizer, some options to consider: Adamax, SGD
 opt = optim.Adam([delta], lr = 1e-1, weight_decay = 0.0001)
 
 input_emb = resnet(norm(tensorize(input_image)))
@@ -201,6 +214,10 @@ input_tensor = tensorize(input_image)
 
 epochs = 45
 
+## Adversarial training
+## 'loss' maximizes the distance between the adversarial embedding and the
+## original input embedding and minimizes the distance between the adversarial
+## embedding and the target embedding
 print(f'\nEpoch |   Loss   | Face Detection')
 print(f'---------------------------------')
 for i in range(epochs):
@@ -210,6 +227,7 @@ for i in range(epochs):
     loss = (-emb_distance(embedding, input_emb)
             +emb_distance(embedding, target_emb))
 
+    ## Some pretty printing and testing to check whether face detection passes
     if i % 5 == 0 or i == epochs - 1:
         detection_test = fr.face_locations(np.array(adv))
         if not detection_test:
@@ -220,17 +238,21 @@ for i in range(epochs):
         
         adv.show()
 
+    ## Backprop step
     loss.backward(retain_graph=True)
     opt.step()
     opt.zero_grad()
 
     delta.data.clamp_(-1, 1)
 
+## Additional testing image for the ground truth 
 temp = detect_face(input_test_location)
 true_emb = resnet(norm(tensorize(temp)))
+## Additional testing image for the target
 temp = detect_face(target_test_location)
 test_emb = resnet(norm(tensorize(temp)))
 
+## Distance calculations and "pretty" printing
 print("\ninput img vs true img  ", emb_distance(input_emb, true_emb).item())
 print("input img vs target    ", emb_distance(input_emb, target_emb).item())
 print("input img vs 2nd target", emb_distance(input_emb, test_emb).item())
@@ -239,6 +261,7 @@ print("advr img vs true img   ", emb_distance(resnet(norm(apply(input_tensor, de
 print("advr img vs target     ", emb_distance(resnet(norm(apply(input_tensor, delta))), target_emb).item())
 print("advr img vs 2nd target ", emb_distance(resnet(norm(apply(input_tensor, delta))), test_emb).item())
 
+## Final results
 imagize(delta.detach()).show()
 imagize(delta.detach()).save('./results/delta.png')
 imagize((input_tensor + delta).detach()).save('./results/combined-face.png')
