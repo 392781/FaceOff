@@ -10,6 +10,8 @@ from torch import autograd
 from PIL import Image, ImageDraw
 from facenet_pytorch import MTCNN, InceptionResnetV1
 
+## Initalizes a constant random seed to keep results consistent if random
+## mask is being used 
 r.seed(1)
 
 class Normalize(nn.Module):
@@ -177,9 +179,8 @@ def create_mask(face_image, mask_type = 'white'):
 
 ############################ MAIN ############################
 
-## Initialization of tools to be used
 ## Standard normalization for ImageNet images found here:
-## ttps://github.com/pytorch/examples/blob/master/imagenet/main.py
+## https://github.com/pytorch/examples/blob/master/imagenet/main.py
 norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 apply = Applier()
 ## Transformations to be used later
@@ -204,14 +205,17 @@ mask = create_mask(input_image)
 delta = tensorize(mask)
 delta.requires_grad_(True)
 
-## Optimizer, some options to consider: Adamax, SGD
-opt = optim.Adam([delta], lr = 1e-1, weight_decay = 0.0001)
+## Optimizer, some options to consider: Adam, SGD
+opt = optim.Adamax([delta], lr = 1e-1, weight_decay = 0.0001)
 
+## Initializing the FaceNet embeddings to be used in the loss function
 input_emb = resnet(norm(tensorize(input_image)))
 target_emb = resnet(norm(tensorize(target_image)))
 
+## Will be used to combine with mask for training
 input_tensor = tensorize(input_image)
 
+## Number of training rounds
 epochs = 45
 
 ## Adversarial training
