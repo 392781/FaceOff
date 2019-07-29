@@ -69,7 +69,7 @@ class Applier(nn.Module):
         Tensor
             combined image and mask tensor
         """
-        image = t.where((image == 0), image, mask)
+        image = t.where((mask == 0), image, mask)
         return image
 
 
