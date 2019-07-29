@@ -1,5 +1,6 @@
 /*
 !.gitignore
 !adversarial_face_recognition.py
+!experiments/
 !results/
 !tools/
