@@ -27,6 +27,7 @@ class Normalize(nn.Module):
         ----------
         mean : list
             a list of mean values for each given dimension
+
         std : list
             a list of standard deviation values fro each given dimension
         """
@@ -66,6 +67,7 @@ class Applier(nn.Module):
         ----------
         image : Tensor
             face tensor
+
         mask : Tensor
             calculated mask tensor
 
@@ -93,10 +95,13 @@ class Attack(object):
         ----------
         input_list : list[PIL.Image]
             list of inputs to train on
+
         target_list : list[PIL.Image]
             list of targets
+
         mask_list : list[np.array]
             list of preprocessed masks to attach to the input
+
         optimizer : str
             takes in either 'sgd', 'adam', or 'adamax'
         """
@@ -108,6 +113,22 @@ class Attack(object):
         self.input_emb = []
         self.target_emb = []
         self.losses = []
+
+        # Necessary tools for training: normalization, image + delta applier, and 
+        # facial recognition model
+        self.norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        self.apply = Applier()
+        self.resnet = InceptionResnetV1(pretrained='vggface2').eval()
+
+        # Read all inputs in.  Embeddings will be used for loss calculation, tensors
+        # will be used for actual training
+        for image, _ in self.input_list:
+            self.input_emb.append(self.resnet(self.norm(tensorize(image))))
+            self.input_tensors.append(tensorize(image))
+
+        # Create target embeddings for loss calculation
+        for image, _ in self.target_list:
+            self.target_emb.append(self.resnet(self.norm(tensorize(image))))
 
         try:
             if (optimizer is 'sgd'):
@@ -131,22 +152,6 @@ class Attack(object):
             number of rounds to train
         """
 
-        # Necessary tools for training: normalization, image + delta applier, and 
-        # facial recognition model
-        norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        apply = Applier()
-        resnet = InceptionResnetV1(pretrained='vggface2').eval()
-
-        # Read all inputs in.  Embeddings will be used for loss calculation, tensors
-        # will be used for actual training
-        for image, _ in self.input_list:
-            self.input_emb.append(resnet(norm(tensorize(image))))
-            self.input_tensors.append(tensorize(image))
-
-        # Create target embeddings for loss calculation
-        for image, _ in self.target_list:
-            self.target_emb.append(resnet(norm(tensorize(image))))
-
         # Initialize lists for each individual input to train and calculate loss on
         self.adversarial_list = [None for i in range(len(self.input_tensors))]
         embeddings = [None for i in range(len(self.input_tensors))]
@@ -160,7 +165,7 @@ class Attack(object):
                 # Applies the mask onto the image
                 self.adversarial_list[i] = apply(self.input_tensors[i], self.mask_list[i])
                 # Calculates the embedding of this adversarial image
-                embeddings[i] = resnet(norm(self.adversarial_list[i]))
+                embeddings[i] = self.resnet(self.norm(self.adversarial_list[i]))
                 # Calculates loss: Maximizes distance between adversarial image and 
                 # input image while minimizing the distance between adversarial image
                 # and target image
@@ -176,7 +181,7 @@ class Attack(object):
                 self.mask_list[i].data.clamp_(-1, 1)
         print(self.losses)
 
-    def results(self, input_test_list, target_test_list):
+    def results(self, input_test_list, target_test_list, save_path='/'):
         """
         Displays results based on two test image lists: one for input, one for target
 
@@ -184,18 +189,20 @@ class Attack(object):
         Parameters
         ----------
         input_test_list : list[PIL.Image]
-            Test images for the inputs
+            test images for the inputs
+
         target_test_list : list[PIL.Image]
-            Test images for the targets
+            test images for the targets
+
+        save_path : str
+            specify a save path further insice './results/{save_path}'
+            default just keeps './results/[delta, combined, ...]/' file structure
         """
 
         # Just a LOT of euclidean distance calculations
-        norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        apply = Applier()
-        resnet = InceptionResnetV1(pretrained='vggface2').eval()
         print('\ninputs vs ground truths')
         for i in range(len(self.input_list)):
-            input_test_emb = resnet(norm(tensorize(input_test_list[i])))
+            input_test_emb = self.resnet(self.norm(tensorize(input_test_list[i])))
             print(emb_distance(self.input_emb[i], input_test_emb).item())
 
         print('\ninputs vs target')
@@ -204,42 +211,42 @@ class Attack(object):
 
         print('\ninputs vs target 2')
         for i in range(len(self.input_list)):
-            target_test_emb = resnet(norm(tensorize(target_test_list[i])))
+            target_test_emb = self.resnet(self.norm(tensorize(target_test_list[i])))
             print(emb_distance(self.input_emb[i], target_test_emb).item())
 
         print('\ntarget vs target 2')
         for i in range(len(self.input_list)):
-            target_test_emb = resnet(norm(tensorize(target_test_list[i])))
+            target_test_emb = self.resnet(self.norm(tensorize(target_test_list[i])))
             print(emb_distance(self.target_emb[i], target_test_emb).item())
 
         print('\nadversarial vs ground truths')
         for i in range(len(self.input_list)):
-            adversarial_emb = resnet(norm(apply(self.input_tensors[i],
+            adversarial_emb = self.resnet(self.norm(self.apply(self.input_tensors[i],
                                                 self.mask_list[i])))
-            input_test_emb = resnet(norm(tensorize(input_test_list[i])))                                    
+            input_test_emb = self.resnet(self.norm(tensorize(input_test_list[i])))                                    
             print(emb_distance(adversarial_emb, input_test_emb).item())
         
         print('\nadversarial vs target')
         for i in range(len(self.input_list)):
-            adversarial_emb = resnet(norm(apply(self.input_tensors[i],
+            adversarial_emb = self.resnet(self.norm(self.apply(self.input_tensors[i],
                                                 self.mask_list[i])))
             print(emb_distance(adversarial_emb, self.target_emb[i]).item())
 
         print('\nadversarial vs target 2')
         for i in range(len(self.input_list)):
-            adversarial_emb = resnet(norm(apply(self.input_tensors[i],
+            adversarial_emb = self.resnet(self.norm(self.apply(self.input_tensors[i],
                                                 self.mask_list[i])))
-            target_test_emb = resnet(norm(tensorize(target_test_list[i])))
+            target_test_emb = self.resnet(self.norm(tensorize(target_test_list[i])))
             print(emb_distance(adversarial_emb, target_test_emb).item())
 
         print('\nSAVING IMAGES')
         for i in tqdm(range(len(self.input_list))):
-            imagize(self.mask_list[i].detach()).save(f'./results/delta/{i}.png')
+            imagize(self.mask_list[i].detach()).save(f'./results{save_path}delta/{i}.png')
             imagize((self.input_tensors[i] + self.mask_list[i]).detach()).save(
-                f'./results/combined/{i}.png'
+                f'./results{save_path}combined/{i}.png'
             )
-            self.input_list[i][0].save(f'./results/input/{i}.png')
-            self.target_list[i][0].save(f'./results/target/{i}.png')
+            self.input_list[i][0].save(f'./results{save_path}input/{i}.png')
+            self.target_list[i][0].save(f'./results{save_path}target/{i}.png')
 
 
 def emb_distance(tensor_1, tensor_2):
@@ -251,6 +258,7 @@ def emb_distance(tensor_1, tensor_2):
     ----------
     tensor_1 : Tensor
         image tensor to compare
+
     tensor_2 : Tensor
         image tensor to compare
 
@@ -264,7 +272,7 @@ def emb_distance(tensor_1, tensor_2):
 
 
 
-def mask_offset(image, mask):
+def mask_offset(image, mask, mask_coor):
     """
     Offsets the mask based on the nose location of the created mask and the target 
     image
@@ -274,16 +282,20 @@ def mask_offset(image, mask):
     ----------
     image : list[PIL.Image, tuple]
         target image to align mask to
-    mask : list[np.array, tuple]
+
+    mask : np.array
         mask to align
+
+    mask_coor : tuple
+        mask nose tip coordinate
 
     Returns
     -------
     PIL.Image
         Image of the offset mask
     """
-    dist = (image[1][0] - mask[1][0], image[1][1] - mask[1][1])
-    new_mask = ImageChops.offset(imagize(tensorize(mask[0])), dist[0], dist[1])
+    dist = (image[1][0] - mask_coor[0], image[1][1] - mask_coor[1])
+    new_mask = ImageChops.offset(imagize(tensorize(mask)), dist[0], dist[1])
     new_mask = tensorize(new_mask)
     new_mask.requires_grad_(True)
     return new_mask
