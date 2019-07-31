@@ -6,13 +6,16 @@ import dlib
 import numpy as np
 import random as r
 import face_recognition as fr
+from tqdm import tqdm
 from torch import autograd
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageChops
 from facenet_pytorch import MTCNN, InceptionResnetV1
 
 ## Initalizes a constant random seed to keep results consistent if random
 ## mask is being used 
 r.seed(1)
+tensorize = transforms.ToTensor()
+imagize = transforms.ToPILImage()
 
 class Normalize(nn.Module):
     """
@@ -30,6 +33,7 @@ class Normalize(nn.Module):
         super(Normalize, self).__init__()
         self.mean = t.Tensor(mean)
         self.std = t.Tensor(std)
+
     def forward(self, x):
         """
         Parameters
@@ -52,6 +56,7 @@ class Applier(nn.Module):
     """
     def __init__(self):
         super(Applier, self).__init__()
+
     def forward(self, image, mask):
         """
         Applies a mask on an image
@@ -69,9 +74,172 @@ class Applier(nn.Module):
         Tensor
             combined image and mask tensor
         """
-        image = t.where((mask == 0), image, mask)
-        return image
+        adversarial_tensor = t.where((mask == 0), image, mask)
+        return adversarial_tensor
 
+
+
+class Attack(object):
+    """
+    Class used to create adversarial facial recognition attacks
+    """
+    def __init__(self, input_list, target_list, mask_list, optimizer):
+        """
+        Class initialization with lists of preprocessed inputs, targets, and masks
+        There are 3 optimizer options: SGD, Adam, Adamax
+
+
+        Parameters
+        ----------
+        input_list : list[PIL.Image]
+            list of inputs to train on
+        target_list : list[PIL.Image]
+            list of targets
+        mask_list : list[np.array]
+            list of preprocessed masks to attach to the input
+        optimizer : str
+            takes in either 'sgd', 'adam', or 'adamax'
+        """
+        self.input_list = input_list
+        self.target_list = target_list
+        self.mask_list = mask_list
+
+        self.input_tensors = []
+        self.input_emb = []
+        self.target_emb = []
+        self.losses = []
+
+        try:
+            if (optimizer is 'sgd'):
+                self.opt = optim.SGD(self.mask_list, lr = 1e-1, momentum = 0.9, weight_decay = 0.0001)
+            elif (optimizer is 'adam'):
+                self.opt = optim.Adam(self.mask_list, lr = 1e-1, weight_decay = 0.0001)
+            elif (optimizer is 'adamax'):
+                self.opt = optim.Adamax(self.mask_list, lr = 1e-1, weight_decay = 0.0001)
+        except:
+            print("No optimizer chosen, reverting to ADAM")
+            self.opt = optim.Adam(self.mask_list, lr = 1e-1, weight_decay = 0.0001)
+    
+    def train(self, epochs = 30):
+        """
+        Trainer.  Essentially the process found in example.py but blown up to work 
+        with lists of objects for batch training.
+
+        Parameters
+        ----------
+        epochs : int
+            number of rounds to train
+        """
+
+        # Necessary tools for training: normalization, image + delta applier, and 
+        # facial recognition model
+        norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        apply = Applier()
+        resnet = InceptionResnetV1(pretrained='vggface2').eval()
+
+        # Read all inputs in.  Embeddings will be used for loss calculation, tensors
+        # will be used for actual training
+        for image, _ in self.input_list:
+            self.input_emb.append(resnet(norm(tensorize(image))))
+            self.input_tensors.append(tensorize(image))
+
+        # Create target embeddings for loss calculation
+        for image, _ in self.target_list:
+            self.target_emb.append(resnet(norm(tensorize(image))))
+
+        # Initialize lists for each individual input to train and calculate loss on
+        self.adversarial_list = [None for i in range(len(self.input_tensors))]
+        embeddings = [None for i in range(len(self.input_tensors))]
+        self.losses = [None for i in range(len(self.input_tensors))]
+
+        # Begin training
+        print('\nTRAINING -------')
+        for i in tqdm(range(epochs)):
+            # For each image, run this training process:
+            for i in range(len(self.adversarial_list)):
+                # Applies the mask onto the image
+                self.adversarial_list[i] = apply(self.input_tensors[i], self.mask_list[i])
+                # Calculates the embedding of this adversarial image
+                embeddings[i] = resnet(norm(self.adversarial_list[i]))
+                # Calculates loss: Maximizes distance between adversarial image and 
+                # input image while minimizing the distance between adversarial image
+                # and target image
+                self.losses[i] = (-emb_distance(embeddings[i], self.input_emb[i])
+                                  +emb_distance(embeddings[i], self.target_emb[i]))
+                
+                # Performs backprop based on loss
+                self.losses[i].backward(retain_graph=True)
+                self.opt.step()
+                self.opt.zero_grad()
+
+                # ... which updates the mask ... and the process begins again
+                self.mask_list[i].data.clamp_(-1, 1)
+        print(self.losses)
+
+    def results(self, input_test_list, target_test_list):
+        """
+        Displays results based on two test image lists: one for input, one for target
+
+
+        Parameters
+        ----------
+        input_test_list : list[PIL.Image]
+            Test images for the inputs
+        target_test_list : list[PIL.Image]
+            Test images for the targets
+        """
+
+        # Just a LOT of euclidean distance calculations
+        norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        apply = Applier()
+        resnet = InceptionResnetV1(pretrained='vggface2').eval()
+        print('\ninputs vs ground truths')
+        for i in range(len(self.input_list)):
+            input_test_emb = resnet(norm(tensorize(input_test_list[i])))
+            print(emb_distance(self.input_emb[i], input_test_emb).item())
+
+        print('\ninputs vs target')
+        for i in range(len(self.input_list)):
+            print(emb_distance(self.input_emb[i], self.target_emb[i]).item())
+
+        print('\ninputs vs target 2')
+        for i in range(len(self.input_list)):
+            target_test_emb = resnet(norm(tensorize(target_test_list[i])))
+            print(emb_distance(self.input_emb[i], target_test_emb).item())
+
+        print('\ntarget vs target 2')
+        for i in range(len(self.input_list)):
+            target_test_emb = resnet(norm(tensorize(target_test_list[i])))
+            print(emb_distance(self.target_emb[i], target_test_emb).item())
+
+        print('\nadversarial vs ground truths')
+        for i in range(len(self.input_list)):
+            adversarial_emb = resnet(norm(apply(self.input_tensors[i],
+                                                self.mask_list[i])))
+            input_test_emb = resnet(norm(tensorize(input_test_list[i])))                                    
+            print(emb_distance(adversarial_emb, input_test_emb).item())
+        
+        print('\nadversarial vs target')
+        for i in range(len(self.input_list)):
+            adversarial_emb = resnet(norm(apply(self.input_tensors[i],
+                                                self.mask_list[i])))
+            print(emb_distance(adversarial_emb, self.target_emb[i]).item())
+
+        print('\nadversarial vs target 2')
+        for i in range(len(self.input_list)):
+            adversarial_emb = resnet(norm(apply(self.input_tensors[i],
+                                                self.mask_list[i])))
+            target_test_emb = resnet(norm(tensorize(target_test_list[i])))
+            print(emb_distance(adversarial_emb, target_test_emb).item())
+
+        print('\nSAVING IMAGES')
+        for i in tqdm(range(len(self.input_list))):
+            imagize(self.mask_list[i].detach()).save(f'./results/delta/{i}.png')
+            imagize((self.input_tensors[i] + self.mask_list[i]).detach()).save(
+                f'./results/combined/{i}.png'
+            )
+            self.input_list[i][0].save(f'./results/input/{i}.png')
+            self.target_list[i][0].save(f'./results/target/{i}.png')
 
 
 def emb_distance(tensor_1, tensor_2):
@@ -96,6 +264,32 @@ def emb_distance(tensor_1, tensor_2):
 
 
 
+def mask_offset(image, mask):
+    """
+    Offsets the mask based on the nose location of the created mask and the target 
+    image
+
+
+    Parameters
+    ----------
+    image : list[PIL.Image, tuple]
+        target image to align mask to
+    mask : list[np.array, tuple]
+        mask to align
+
+    Returns
+    -------
+    PIL.Image
+        Image of the offset mask
+    """
+    dist = (image[1][0] - mask[1][0], image[1][1] - mask[1][1])
+    new_mask = ImageChops.offset(imagize(tensorize(mask[0])), dist[0], dist[1])
+    new_mask = tensorize(new_mask)
+    new_mask.requires_grad_(True)
+    return new_mask
+
+
+
 def detect_face(image_file_name):
     """
     Helper function to run the facial detection and alignment process using
@@ -110,11 +304,11 @@ def detect_face(image_file_name):
 
     Returns
     -------
-    PIL.Image
-        Resized face image
+    list : [PIL.Image, tuple]
+        Resized face image and nose tip location
     """
     detector = dlib.get_frontal_face_detector()
-    shape_predictor = dlib.shape_predictor('./tools/shape_predictor_5_face_landmarks.dat')
+    shape_predictor = dlib.shape_predictor('./shape_predictor_5_face_landmarks.dat')
     image = dlib.load_rgb_image(image_file_name)
     dets = detector(image, 1)
 
@@ -122,10 +316,13 @@ def detect_face(image_file_name):
     for detection in dets:
         faces.append(shape_predictor(image, detection))
 
-    return Image.fromarray(dlib.get_face_chip(image, faces[0], size=300))
+    face_image = Image.fromarray(dlib.get_face_chip(image, faces[0], size=300))
+    landmarks = fr.face_landmarks(np.array(face_image))
+    
 
+    return [face_image, landmarks[0]['nose_tip'][2]]
 
-def create_mask(face_image, mask_type = 'white'):
+def create_mask(face_image):
     """
     Helper function to create a facial mask to cover lower portion of the
     face.  Uses 'face_recognizer' library's landmark detector to build a
@@ -146,8 +343,8 @@ def create_mask(face_image, mask_type = 'white'):
 
     Returns
     -------
-    np.array (float32)
-        mask array
+    list : [np.array (float32), tuple]
+        mask array and nose tip location
     """
     mask = Image.new('RGB', face_image.size, color=(255,255,255))
     d = ImageDraw.Draw(mask)
@@ -174,98 +371,4 @@ def create_mask(face_image, mask_type = 'white'):
                 else:
                     mask_array[i][j][k] = 0
 
-    return mask_array
-
-
-############################ MAIN ############################
-
-## Standard normalization for ImageNet images found here:
-## https://github.com/pytorch/examples/blob/master/imagenet/main.py
-norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-apply = Applier()
-## Transformations to be used later
-tensorize = transforms.ToTensor()
-imagize = transforms.ToPILImage()
-## FaceNet PyTorch model
-resnet = InceptionResnetV1(pretrained='vggface2').eval()
-
-## Image preprocessing
-input_image_location =  './faces/ronald.jpg'
-target_image_location = './faces/john.jpg'
-input_test_location =   './faces/ronald2.jpg'
-target_test_location =  './faces/john2.jpg'
-
-input_image = detect_face(input_image_location)
-target_image = detect_face(target_image_location)
-input_image.save('./results/input-face.png')
-target_image.save('./results/target-face.png')
-
-## Mask creation
-mask = create_mask(input_image)
-delta = tensorize(mask)
-delta.requires_grad_(True)
-
-## Optimizer, some options to consider: Adam, SGD
-opt = optim.Adamax([delta], lr = 1e-1, weight_decay = 0.0001)
-
-## Initializing the FaceNet embeddings to be used in the loss function
-input_emb = resnet(norm(tensorize(input_image)))
-target_emb = resnet(norm(tensorize(target_image)))
-
-## Will be used to combine with mask for training
-input_tensor = tensorize(input_image)
-
-## Number of training rounds
-epochs = 45
-
-## Adversarial training
-## 'loss' maximizes the distance between the adversarial embedding and the
-## original input embedding and minimizes the distance between the adversarial
-## embedding and the target embedding
-print(f'\nEpoch |   Loss   | Face Detection')
-print(f'---------------------------------')
-for i in range(epochs):
-    adver = apply(input_tensor, delta)
-    adv = imagize(adver.detach())
-    embedding = resnet(norm(adver))
-    loss = (-emb_distance(embedding, input_emb)
-            +emb_distance(embedding, target_emb))
-
-    ## Some pretty printing and testing to check whether face detection passes
-    if i % 5 == 0 or i == epochs - 1:
-        detection_test = fr.face_locations(np.array(adv))
-        if not detection_test:
-            d = 'Failed'
-        else:
-            d = 'Pass ' + str(detection_test)
-        print(f'{i:5} | {loss.item():8.5f} | {d}')
-        
-        adv.show()
-
-    ## Backprop step
-    loss.backward(retain_graph=True)
-    opt.step()
-    opt.zero_grad()
-
-    delta.data.clamp_(-1, 1)
-
-## Additional testing image for the ground truth 
-temp = detect_face(input_test_location)
-true_emb = resnet(norm(tensorize(temp)))
-## Additional testing image for the target
-temp = detect_face(target_test_location)
-test_emb = resnet(norm(tensorize(temp)))
-
-## Distance calculations and "pretty" printing
-print("\ninput img vs true img  ", emb_distance(input_emb, true_emb).item())
-print("input img vs target    ", emb_distance(input_emb, target_emb).item())
-print("input img vs 2nd target", emb_distance(input_emb, test_emb).item())
-print(" target vs 2nd target  ", emb_distance(target_emb, test_emb).item())
-print("advr img vs true img   ", emb_distance(resnet(norm(apply(input_tensor, delta))), true_emb).item())
-print("advr img vs target     ", emb_distance(resnet(norm(apply(input_tensor, delta))), target_emb).item())
-print("advr img vs 2nd target ", emb_distance(resnet(norm(apply(input_tensor, delta))), test_emb).item())
-
-## Final results
-imagize(delta.detach()).show()
-imagize(delta.detach()).save('./results/delta.png')
-imagize((input_tensor + delta).detach()).save('./results/combined-face.png')
+    return [mask_array, landmarks[0]['nose_tip'][2]]
