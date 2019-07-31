@@ -1,6 +1,6 @@
 /*
 !.gitignore
-!example
+!example.py
 !experiment_1.py
 !adversarial_face_recognition.py
 !shape_predictor_5_face_landmarks.dat
