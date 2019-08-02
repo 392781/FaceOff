@@ -5,8 +5,9 @@ from tqdm import tqdm
 """
     Documentation for what is going on will come later
 
-    For now this just takes 5 input IDs and 5 target IDs and then creates attacks for
-    each one
+    Another test of transferability except this tests targeting a different target
+    image... Didn't use this in results since this experiment wasn't well thought 
+    out
 
     RESULTS: (all euclidean distances)
     inputs vs ground truths
@@ -17,18 +18,18 @@ from tqdm import tqdm
     0.6631213426589966
 
     inputs vs target
-    0.8771535158157349
-    1.143986463546753
-    1.1140056848526
-    1.1364113092422485
-    1.099700927734375
-
-    inputs vs target 2
     0.8734384179115295
     1.3240668773651123
     0.9298726916313171
     1.2159967422485352
     0.8732156157493591
+
+    inputs vs target 2
+    0.8771535158157349
+    1.143986463546753
+    1.1140056848526
+    1.1364113092422485
+    1.099700927734375
 
     target vs target 2
     0.5311635136604309
@@ -38,34 +39,38 @@ from tqdm import tqdm
     0.7643409371376038
 
     adversarial vs ground truths
-    0.8155664205551147
-    1.2387598752975464
-    1.0632591247558594
-    1.137104868888855
-    1.388970136642456
+    0.8526229858398438
+    0.9455323815345764
+    0.8666716814041138
+    0.5481076240539551
+    0.8349324464797974
 
     adversarial vs target
-    0.2924672067165375
-    0.30148038268089294
-    0.3449569642543793
-    0.2755737900733948
-    0.42731451988220215
+    1.0066981315612793
+    1.281568169593811
+    1.0845149755477905
+    1.1506640911102295
+    0.9421268701553345
 
     adversarial vs target 2
-    0.6658462285995483
-    0.6938043236732483
-    0.8824158310890198
-    0.5271591544151306
-    0.9361984133720398
+    0.9942540526390076
+    1.0539507865905762
+    1.1439930200576782
+    1.0762476921081543
+    1.143889307975769
 """
 
 input_path = glob.glob('./faces/input/*.*')
-target_path = glob.glob('./faces/target/*.*')
+target_path = glob.glob('./faces/target_tests/*.*')
+mask_path = glob.glob('./results/experiment_1/delta/*.*')
+input_mask_path = glob.glob('./results/experiment_1/input/*.*')
 input_test_path = glob.glob('./faces/input_tests/*.*')
-target_test_path = glob.glob('./faces/target_tests/*.*')
+target_test_path = glob.glob('./faces/target/*.*')
 
 input_path.sort()
 target_path.sort()
+mask_path.sort()
+input_mask_path.sort()
 input_test_path.sort()
 target_test_path.sort()
 
@@ -84,15 +89,16 @@ for image_path in tqdm(target_path):
     target_list.append(att.detect_face(image_path))
 
 print('\nMASKS ----------')
-for face, _ in tqdm(input_list):
-    mask_list.append(att.create_mask(face))
+for image_path in tqdm(mask_path):
+
+    mask_list.append(att.fr.load_image_file(image_path))
 
 print('\nMASK OFFSET ----')
 for i in tqdm(range(len(mask_list))):
-    mask_list[i] = att.mask_offset(input_list[i], mask_list[i][0], mask_list[i][1])
+    coor = att.detect_face(input_mask_path[i])[1]
+    mask_list[i] = att.mask_offset(input_list[i], mask_list[i], coor)
     
 attack = att.Attack(input_list, target_list, mask_list, 'adamax')
-attack.train(epochs = 45)
 
 for image_path in input_test_path:
     input_test_list.append(att.detect_face(image_path)[0])
@@ -100,4 +106,4 @@ for image_path in input_test_path:
 for image_path in target_test_path:
     target_test_list.append(att.detect_face(image_path)[0])
 
-attack.results(input_test_list, target_test_list, '/experiment_1/')
+attack.results(input_test_list, target_test_list, '/experiment_3/')

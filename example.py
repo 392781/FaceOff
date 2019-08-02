@@ -11,10 +11,10 @@ imagize = transforms.ToPILImage()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
 ## Image preprocessing
-input_image_location =  './faces/input/ronald.jpg'
-target_image_location = './faces/target/nick.jpg'
-input_test_location =   './faces/input_tests/ronald2.jpg'
-target_test_location =  './faces/target_tests/nick2.jpg'
+input_image_location =  './faces/input/winona.jpg'
+target_image_location = './faces/target/emma.jpg'
+input_test_location =   './faces/input_tests/winona2.jpg'
+target_test_location =  './faces/target_tests/emma2.jpg'
 
 input_image = detect_face(input_image_location)[0]
 print("\nInput detected and aligned")
@@ -81,15 +81,19 @@ temp = detect_face(target_test_location)[0]
 test_emb = resnet(norm(tensorize(temp)))
 
 ## Distance calculations and "pretty" printing
+print("\n target vs 2nd target  ", emb_distance(target_emb, test_emb).item())
 print("\ninput img vs true img  ", emb_distance(input_emb, true_emb).item())
-print("input img vs target    ", emb_distance(input_emb, target_emb).item())
-print("input img vs 2nd target", emb_distance(input_emb, test_emb).item())
-print(" target vs 2nd target  ", emb_distance(target_emb, test_emb).item())
-print("advr img vs true img   ", emb_distance(resnet(norm(apply(input_tensor, delta))), true_emb).item())
-print("advr img vs target     ", emb_distance(resnet(norm(apply(input_tensor, delta))), target_emb).item())
-print("advr img vs 2nd target ", emb_distance(resnet(norm(apply(input_tensor, delta))), test_emb).item())
+print("advrs img vs true img  ", emb_distance(resnet(norm(apply(input_tensor, delta))), true_emb).item())
+print("\ninput img vs target    ", emb_distance(input_emb, target_emb).item())
+print("advrs img vs target    ", emb_distance(resnet(norm(apply(input_tensor, delta))), target_emb).item())
+print("\ninput img vs 2nd target", emb_distance(input_emb, test_emb).item())
+print("advrs img vs 2nd target", emb_distance(resnet(norm(apply(input_tensor, delta))), test_emb).item())
 
 ## Final results
-imagize(delta.detach()).show()
+Image.fromarray(np.hstack(
+    (np.asarray(input_image.resize((300,300))), 
+     np.asarray(imagize(delta.detach()).resize((300,300))),
+     np.asarray(imagize((input_tensor + delta).detach()).resize((300,300))), 
+     np.asarray(target_image.resize((300,300)))))).show()
 imagize(delta.detach()).save('./results/example/delta.png')
 imagize((input_tensor + delta).detach()).save('./results/example/combined-face.png')
