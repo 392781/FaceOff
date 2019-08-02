@@ -3,7 +3,7 @@
 
 <img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/input-face.png?token=AGA77BYF3VKF2GAE2TEGJR25JXOQU" width="150"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/delta.png?token=AGA77B2UH6QPPJJVJPV2IEK5JXOTY" width="150"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/combined-face.png?token=AGA77B3AA6CH3NHFOVQFUGS5JXOUS" width="150"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/target-face.png?token=AGA77B7ZOLHRLBGU5W7IMUC5JXOPC" width="150">
 
-Winona is detected as Emma after the mask has been applied
+John Travolta is detected as Nicholas Cage after the mask has been applied
 
 
 ## Usage
