@@ -14,6 +14,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 ## Initalizes a constant random seed to keep results consistent if random
 ## mask is being used 
 r.seed(1)
+## Little helpers :)
 tensorize = transforms.ToTensor()
 imagize = transforms.ToPILImage()
 
@@ -163,7 +164,7 @@ class Attack(object):
             # For each image, run this training process:
             for i in range(len(self.adversarial_list)):
                 # Applies the mask onto the image
-                self.adversarial_list[i] = apply(self.input_tensors[i], self.mask_list[i])
+                self.adversarial_list[i] = self.apply(self.input_tensors[i], self.mask_list[i])
                 # Calculates the embedding of this adversarial image
                 embeddings[i] = self.resnet(self.norm(self.adversarial_list[i]))
                 # Calculates loss: Maximizes distance between adversarial image and 
@@ -199,7 +200,7 @@ class Attack(object):
             default just keeps './results/[delta, combined, ...]/' file structure
         """
 
-        # Just a LOT of euclidean distance calculations
+        # Just a LOT of euclidean distance calculations... With almost no code reuse :(
         print('\ninputs vs ground truths')
         for i in range(len(self.input_list)):
             input_test_emb = self.resnet(self.norm(tensorize(input_test_list[i])))
