@@ -3,8 +3,6 @@ import glob
 from tqdm import tqdm
 
 """
-    Documentation for what is going on will come later
-
     Another test of transferability except this tests targeting a different target
     image... Didn't use this in results since this experiment wasn't well thought 
     out
@@ -90,7 +88,6 @@ for image_path in tqdm(target_path):
 
 print('\nMASKS ----------')
 for image_path in tqdm(mask_path):
-
     mask_list.append(att.fr.load_image_file(image_path))
 
 print('\nMASK OFFSET ----')

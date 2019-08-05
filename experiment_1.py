@@ -59,22 +59,27 @@ from tqdm import tqdm
     0.9361984133720398
 """
 
+# Gather all image locations
 input_path = glob.glob('./faces/input/*.*')
 target_path = glob.glob('./faces/target/*.*')
 input_test_path = glob.glob('./faces/input_tests/*.*')
 target_test_path = glob.glob('./faces/target_tests/*.*')
 
+# Sort each image location by name so that each identity corresponds 
+# for testing
 input_path.sort()
 target_path.sort()
 input_test_path.sort()
 target_test_path.sort()
 
+# List initialization for the attack class inputs
 input_list = []
 target_list = []
 input_test_list = []
 target_test_list = []
 mask_list = []
 
+# Detect faces for all the image locations
 print('\nINPUTS ---------')
 for image_path in tqdm(input_path):
     input_list.append(att.detect_face(image_path))
@@ -91,13 +96,16 @@ print('\nMASK OFFSET ----')
 for i in tqdm(range(len(mask_list))):
     mask_list[i] = att.mask_offset(input_list[i], mask_list[i][0], mask_list[i][1])
     
+# Create attack class and train using adamax
 attack = att.Attack(input_list, target_list, mask_list, 'adamax')
 attack.train(epochs = 45)
 
+# Put together test images 
 for image_path in input_test_path:
     input_test_list.append(att.detect_face(image_path)[0])
 
 for image_path in target_test_path:
     target_test_list.append(att.detect_face(image_path)[0])
 
+# Print results!
 attack.results(input_test_list, target_test_list, '/experiment_1/')

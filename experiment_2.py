@@ -3,8 +3,6 @@ import glob
 from tqdm import tqdm
 
 """
-    Documentation for what is going on will come later
-
     This experiment tests the transferability of masks for the same input IDs but
     different images
 
@@ -59,6 +57,8 @@ from tqdm import tqdm
     1.0198875665664673
 """
 
+# Gather all image locations, this includes the created masks from the previous
+# experiment that will be applied to new faces
 input_path = glob.glob('./faces/input_tests/*.*')
 target_path = glob.glob('./faces/target/*.*')
 mask_path = glob.glob('./results/experiment_1/delta/*.*')
@@ -66,6 +66,8 @@ input_mask_path = glob.glob('./results/experiment_1/input/*.*')
 input_test_path = glob.glob('./faces/input/*.*')
 target_test_path = glob.glob('./faces/target_tests/*.*')
 
+# Sort each image location by name so that each identity corresponds 
+# for testing
 input_path.sort()
 target_path.sort()
 mask_path.sort()
@@ -73,12 +75,14 @@ input_mask_path.sort()
 input_test_path.sort()
 target_test_path.sort()
 
+# List initialization for the attack class inputs
 input_list = []
 target_list = []
 input_test_list = []
 target_test_list = []
 mask_list = []
 
+# Detect faces for all the image locations and apply masks for new faces
 print('\nINPUTS ---------')
 for image_path in tqdm(input_path):
     input_list.append(att.detect_face(image_path))
@@ -89,7 +93,6 @@ for image_path in tqdm(target_path):
 
 print('\nMASKS ----------')
 for image_path in tqdm(mask_path):
-
     mask_list.append(att.fr.load_image_file(image_path))
 
 print('\nMASK OFFSET ----')
@@ -97,12 +100,15 @@ for i in tqdm(range(len(mask_list))):
     coor = att.detect_face(input_mask_path[i])[1]
     mask_list[i] = att.mask_offset(input_list[i], mask_list[i], coor)
     
+# Initialize the attack class, no training needed just results
 attack = att.Attack(input_list, target_list, mask_list, 'adamax')
 
+# Put together test images 
 for image_path in input_test_path:
     input_test_list.append(att.detect_face(image_path)[0])
 
 for image_path in target_test_path:
     target_test_list.append(att.detect_face(image_path)[0])
 
+# Print results!
 attack.results(input_test_list, target_test_list, '/experiment_2/')
