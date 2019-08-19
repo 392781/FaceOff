@@ -1,0 +1,8 @@
+pytorch
+torchvision
+facenet-pytorch
+face_recognition
+dlib
+tqdm
+numpy
+Pillow
