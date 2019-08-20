@@ -18,3 +18,5 @@ To get an idea on how the training procedure works without all the python class 
 * Wang, Mei, and Weihong Deng. "Deep face recognition: A survey." arXiv preprint arXiv:1804.06655 (2018).
 * MacDonald, Bruce. “Fooling Facial Detection with Fashion.” Towards Data Science, Towards Data Science, 4 June 2019, towardsdatascience.com/fooling-facial-detection-with-fashion-d668ed919eb.
 * Thys, Simen, et al. "Fooling automated surveillance cameras: adversarial patches to attack person detection." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops. 2019.
+
+Big thanks to Tim Esler for his [PyTorch FaceNet implementation](https://github.com/timesler/facenet-pytorch)
