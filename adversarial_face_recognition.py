@@ -2,10 +2,11 @@ import torch.optim as optim
 import torch as t
 import torch.nn as nn
 import torchvision.transforms as transforms
+import face_recognition as fr
 import dlib
 import numpy as np
 import random as r
-import face_recognition as fr
+import glob
 from tqdm import tqdm
 from torch import autograd
 from PIL import Image, ImageDraw, ImageChops
@@ -385,3 +386,30 @@ def create_mask(face_image):
                     mask_array[i][j][k] = 0
 
     return [mask_array, landmarks[0]['nose_tip'][2]]
+
+
+def load_data(path_to_data):
+    """
+    Helper function for loading image data.  Allows user to load the input, target, 
+    and test images.  Mask creation and offsetting must be done manually.
+
+    Parameters
+    ----------
+    path_to_data : str
+        Path to the given data.  Ex: './faces/input/*.*' where *.* denotes a file of
+        any name and any extension.
+
+    Returns
+    -------
+    list : [[PIL.Image, tuple]]
+        List of resized face images and nose tip locations
+    """
+    path = glob.glob(path_to_data)
+    path.sort()
+
+    image_list = []
+
+    for image_path in tqdm(path):
+        image_list.append(detect_face(image_path))
+
+    return image_list
