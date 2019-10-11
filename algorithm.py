@@ -11,10 +11,10 @@ imagize = transforms.ToPILImage()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
 ## Image preprocessing
-input_image_location =  './faces/input/john.jpg'
-target_image_location = './faces/target/nick.jpg'
-input_test_location =   './faces/input_tests/john2.jpg'
-target_test_location =  './faces/target_tests/nick2.jpg'
+input_image_location =  './faces/input/ronald.jpg'
+target_image_location = './faces/target/chris.jpg'
+input_test_location =   './faces/input_tests/ronald2.jpg'
+target_test_location =  './faces/target_tests/chris2.jpg'
 
 input_image = detect_face(input_image_location)[0]
 print("\nInput detected and aligned")
@@ -40,7 +40,7 @@ print("Embeddings created")
 input_tensor = tensorize(input_image)
 
 ## Number of training rounds
-epochs = 45
+epochs = 20
 
 ## Adversarial training
 ## 'loss' maximizes the distance between the adversarial embedding and the

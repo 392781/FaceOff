@@ -10,7 +10,7 @@ import glob
 from tqdm import tqdm
 from torch import autograd
 from PIL import Image, ImageDraw, ImageChops
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from facenet_pytorch import InceptionResnetV1
 
 ## Initalizes a constant random seed to keep results consistent if random
 ## mask is being used 
