@@ -31,7 +31,7 @@ pip install -r requirements.txt
 from adversarial_face_recognition import *`
 ```
 
-For training instructions look at `example.py` to get started in less than 30 lines.
+For training instructions look at [`example.py`](https://github.com/392781/Face-Off/blob/master/example.py) to get started in less than 30 lines.
 
 ## Usage
 The purpose of this library is to create adversarial attacks agains the FaceNet face recognizer.  This is the preliminary work towards creating a more robust physical attack using a mask that a person could wear over their face.
