@@ -4,6 +4,6 @@
 !experiment_*.py
 !adversarial_face_recognition.py
 !shape_predictor_5_face_landmarks.dat
-!results/
 !faces/
 !database.file
+!exp_1.py
