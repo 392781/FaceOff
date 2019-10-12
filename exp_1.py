@@ -9,9 +9,16 @@ with open('./database.file', 'rb') as f:
 print('Loading data')
 input_image = load_data('./faces/input/ronald.jpg')[0]
 
+
+device = t.device('cuda:0' if t.cuda.is_available() else 'cpu')
+
 norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+norm = norm.to(device)
 apply = Applier()
+apply = apply.to(device)
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
+resnet = resnet.to(device)
+
 try:
     resnet.cuda()
 except:
@@ -39,7 +46,6 @@ epochs = 40
 for i in range(0, len(database)):
     list_of_masks = deepcopy(mask_list)
     opt = optim.Adamax(list_of_masks, lr = 1e-1, weight_decay = 0.0001)
-
     target_emb = database[i][1:6]
 
     adversarial_list = [None for v in range(len(list_of_masks))]
