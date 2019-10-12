@@ -6,3 +6,4 @@ dlib
 tqdm
 numpy
 Pillow
+pickle
