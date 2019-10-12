@@ -11,7 +11,7 @@ input_image = load_data('./faces/input/ronald.jpg')[0]
 
 
 device = t.device('cuda:0' if t.cuda.is_available() else 'cpu')
-
+print(t.cuda.get_device_name(0))
 norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 norm = norm.to(device)
 apply = Applier()
@@ -32,8 +32,8 @@ print('Creating inputs\n')
 input_emb = []
 input_tensors = []
 for image, _ in input_list:
-    input_emb.append(resnet(norm(tensorize(image))))
-    input_tensors.append(tensorize(image))
+    input_emb.append(resnet(norm(tensorize(image).cuda())))
+    input_tensors.append(tensorize(image).cuda())
 
 mask_list = []
 for face, _ in input_list:
@@ -56,11 +56,11 @@ for i in range(0, len(database)):
     save_masks_loc = './results/exp_1/id_' + str(database[i][0]) + '_masks.file'
 
     # Begin training
-    for k in tqdm(range(epochs), desc=f'IMG #: {i+1:2}'):
-        for h in tqdm(range(len(adversarial_list)), desc=f'ID: {database[i][0]:5}'):
+    for k in tqdm(range(epochs), desc=f'ID: {database[i][0]:5}'):
+        for h in range(len(adversarial_list)):
 
             adversarial_list[h] = apply(input_tensors[h], list_of_masks[h])
-            embeddings[h] = resnet(norm(adversarial_list[h]))
+            embeddings[h] = resnet(norm(adversarial_list[h].cuda()))
 
             losses[h] = (-emb_distance(embeddings[h], input_emb[h])
                                 +emb_distance(embeddings[h], target_emb[h]))

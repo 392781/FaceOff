@@ -16,6 +16,7 @@ from facenet_pytorch import InceptionResnetV1
 ## mask is being used 
 r.seed(1)
 ## Little helpers :)
+device = t.device('cuda:0' if t.cuda.is_available() else 'cpu')
 tensorize = transforms.ToTensor()
 imagize = transforms.ToPILImage()
 
@@ -119,18 +120,21 @@ class Attack(object):
         # Necessary tools for training: normalization, image + delta applier, and 
         # facial recognition model
         self.norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        self.norm.to(device)
         self.apply = Applier()
+        self.apply.to(device)
         self.resnet = InceptionResnetV1(pretrained='vggface2').eval()
+        self.resnet.to(device)
 
         # Read all inputs in.  Embeddings will be used for loss calculation, tensors
         # will be used for actual training
         for image, _ in self.input_list:
-            self.input_emb.append(self.resnet(self.norm(tensorize(image))))
+            self.input_emb.append(self.resnet(self.norm(tensorize(image).cuda())))
             self.input_tensors.append(tensorize(image))
 
         # Create target embeddings for loss calculation
         for image, _ in self.target_list:
-            self.target_emb.append(self.resnet(self.norm(tensorize(image))))
+            self.target_emb.append(self.resnet(self.norm(tensorize(image).cuda())))
 
         try:
             if (optimizer is 'sgd'):
@@ -270,7 +274,10 @@ def emb_distance(tensor_1, tensor_2):
         single item tensor containing the distance between tensors
         access by calling item()
     """
-    return (tensor_1 - tensor_2).norm()
+    tensor_1 = tensor_1.to(device)
+    tensor_2 = tensor_2.to(device)
+    ten = (tensor_1 - tensor_2).to(device)
+    return ten.norm()
 
 
 
@@ -298,7 +305,7 @@ def mask_offset(image, mask, mask_coor):
     """
     dist = (image[1][0] - mask_coor[0], image[1][1] - mask_coor[1])
     new_mask = ImageChops.offset(imagize(tensorize(mask)), dist[0], dist[1])
-    new_mask = tensorize(new_mask)
+    new_mask = tensorize(new_mask).cuda()
     new_mask.requires_grad_(True)
     return new_mask
 
