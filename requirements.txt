@@ -1,7 +1,8 @@
-pytorch
+torch
 torchvision
 facenet-pytorch
 face_recognition
+cmake
 dlib
 tqdm
 numpy
