@@ -36,7 +36,9 @@ adv_list = []
 for loc in emb_loc:
     with open(loc, 'rb') as f:
         adv_list.append(pickle.load(f))
-
+# This is to recombine all the saved mask tuples in this form:
+# (ID_Number, tensor_1, tensor_2, tensor_3, 
+#  tensor_4, tensor_5)
 mask_loc = glob.glob('./results/exp_1/masks/*')
 mask_loc.sort()
 mask_list = []
