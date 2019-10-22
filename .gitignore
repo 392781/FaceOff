@@ -8,5 +8,5 @@
 !database.py
 !exp_1.py
 !results.py
-!results/exp_1/embeddings/
-!results/exp_1/masks/
+!results/
+!mask_viewer.py
