@@ -51,7 +51,7 @@ counter = 0
 t_count = 0
 # d_count is for the total number of adv faces not detected
 d_count = 0
-# index for mask_list
+# index to iterate through mask_list
 i = 0
 for adv_img_list in tqdm(adv_list):
     mask_img_list = mask_list[i]
@@ -62,7 +62,7 @@ for adv_img_list in tqdm(adv_list):
         
         # Testing to see if the face is detected
         adversarial_tensor = apply(ground_truth_tensor, mask_img_list[img_idx]).detach().to(device)
-        adversarial_image = imagize(adversarial_tensor)
+        adversarial_image = imagize(adversarial_tensor.cpu())
         detection_test = fr.face_locations(np.array(adversarial_image))
         counter += 1
         # if the faces isn't detected, +1 counter, skip image search
@@ -89,5 +89,6 @@ for adv_img_list in tqdm(adv_list):
     i += 1
 
 # Outputs!
-print("Successful attacks", t_count, counter, t_count/counter)
-print("Faces not detected", d_count)
+print("Successful attacks  ", t_count, counter, t_count/counter)
+print("Faces not detected  ", d_count)
+print("Unsuccessful attacks", counter - (t_count + d_count))
