@@ -50,8 +50,8 @@ print('Creating inputs\n')
 input_emb = []
 input_tensors = []
 for image, _ in input_list:
-    input_emb.append(resnet(norm(tensorize(image))))
-    input_tensors.append(tensorize(image))
+    input_emb.append(resnet(norm(tensorize(image).cuda())))
+    input_tensors.append(tensorize(image).cuda())
 
 # Masks for each input image that will train...
 # So in this case 5 masks, for 5 target images of 1 identity
