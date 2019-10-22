@@ -1,11 +1,12 @@
 /*
 !.gitignore
 !example.py
-!experiment_*.py
 !adversarial_face_recognition.py
 !shape_predictor_5_face_landmarks.dat
 !faces/
 !database.file
+!database.py
 !exp_1.py
 !results.py
-!results/exp_1/
+!results/exp_1/embeddings/
+!results/exp_1/masks/
