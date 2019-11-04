@@ -46,6 +46,7 @@ print(names[0][:])
 
 resnet = InceptionResnetV1(pretrained = 'vggface2').eval()
 database = []
+database_img = []
 db_size = 40
 
 for i in range(0, db_buffer):
@@ -53,6 +54,7 @@ for i in range(0, db_buffer):
         break
 
     id_vector = (names[i][0],)
+    id_img = (names[i][0],)
 
     img_number = 6
     for j in tqdm(range(1, img_buffer)):
@@ -66,6 +68,7 @@ for i in range(0, db_buffer):
             vector = resnet(norm(tensorize(img)))
             vector.detach_()
             id_vector += (vector,)
+            id_img += (np.asarray(img),)
         except:
             img_number += 1
 
@@ -79,12 +82,16 @@ for i in range(0, db_buffer):
     id_vector += (t.tensor(avg),)
 
     database.append(id_vector)
+    database.append(id_img)
 
 print(database[0])
 
 
 with open('./database.file', 'wb') as f:
     pickle.dump(database, f)
+
+with open('./database_img.file', 'wb') as f:
+    pickle.dump(database_img, f)
 
 with open('./database.file', 'rb') as f:
     dump = pickle.load(f)

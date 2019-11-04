@@ -29,11 +29,9 @@ mask_loc.sort()
 mask_list = []
 for loc in mask_loc:
     with open(loc, 'rb') as f:
-        t.load(f, lambda storage, loc: storage)
         mask_list.append(pickle.load(f))
 
 with open('./database.file', 'rb') as f:
-    t.load(f, lambda storage, loc: storage)
     database = pickle.load(f)
 
 emb_list = []
@@ -41,10 +39,12 @@ emb_names = []
 for ID in database:
     for i in range(1, 6):
         img = imagize(ID[i].detach().cpu())
+        test = face_locations(np.asarray(img))
         enc = face_encodings(np.asarray(img))
+        print(test)
         emb_list.append(enc)
         emb_names.append(ID[0])
 
 test_img = create_mask_np(mask_list, 4, 4)
-
+print(emb_list)
 print(compare_faces(emb_list, test_img))
