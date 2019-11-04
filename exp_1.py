@@ -34,11 +34,6 @@ apply = apply.to(device)
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 resnet = resnet.to(device)
 
-try:
-    resnet.cuda()
-except:
-    print('No cuda :(')
-
 # 1 image to train on for every target
 input_list = []
 for i in range(0, 5):
