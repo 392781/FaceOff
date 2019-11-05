@@ -64,7 +64,6 @@ for i in range(0, db_buffer):
         path = './celebA/img_celeba/' + names[i][j]
         try:
             img = detect_face(path)[0]
-            print(img)
             vector = resnet(norm(tensorize(img)))
             vector.detach_()
             id_vector += (vector,)
@@ -82,7 +81,7 @@ for i in range(0, db_buffer):
     id_vector += (t.tensor(avg),)
 
     database.append(id_vector)
-    database.append(id_img)
+    database_img.append(id_img)
 
 print(database[0])
 
