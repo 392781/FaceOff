@@ -5,6 +5,7 @@
 !shape_predictor_5_face_landmarks.dat
 !faces/
 !database.file
+!database_img.file
 !database.py
 !exp_1.py
 !exp_2.py
