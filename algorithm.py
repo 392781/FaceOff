@@ -71,7 +71,7 @@ for i in range(epochs):
     opt.step()
     opt.zero_grad()
 
-    delta.data.clamp_(-1, 1)
+    delta.data.clamp_(0, 1)
 
 ## Additional testing image for the ground truth 
 temp = detect_face(input_test_location)[0]
