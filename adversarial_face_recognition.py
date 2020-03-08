@@ -184,7 +184,7 @@ class Attack(object):
                 self.opt.zero_grad()
 
                 # ... which updates the mask ... and the process begins again
-                self.mask_list[i].data.clamp_(-1, 1)
+                self.mask_list[i].data.clamp_(0, 1)
         print(self.losses)
 
     def results(self, input_test_list, target_test_list, save_path='/'):
