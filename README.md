@@ -50,4 +50,4 @@ An image of this process can be seen below.
 * MacDonald, Bruce. “Fooling Facial Detection with Fashion.” Towards Data Science, Towards Data Science, 4 June 2019, towardsdatascience.com/fooling-facial-detection-with-fashion-d668ed919eb.
 * Thys, Simen, et al. "Fooling automated surveillance cameras: adversarial patches to attack person detection." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops. 2019.
 
-Big thanks to Tim Esler for his [PyTorch FaceNet implementation](https://github.com/timesler/facenet-pytorch)
+Used the [PyTorch FaceNet implementation](https://github.com/timesler/facenet-pytorch) by Tim Esler
