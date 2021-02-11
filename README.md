@@ -1,7 +1,7 @@
 # Face-Off
 ### Steps towards physical adversarial attacks on facial recognition
 
-<img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/input-face.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/delta.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/combined-face.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/target-face.png" width="175">
+<img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/input-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/delta-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/combined-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/target-face-example.png" width="175">
 
 Input image on the left is detected as the target image on the right after the mask has been applied.
 
