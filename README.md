@@ -1,7 +1,7 @@
 # Face-Off
 ### Steps towards physical adversarial attacks on facial recognition
 
-<img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/input-face.png?token=AGA77BYF3VKF2GAE2TEGJR25JXOQU" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/delta.png?token=AGA77B2UH6QPPJJVJPV2IEK5JXOTY" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/combined-face.png?token=AGA77B3AA6CH3NHFOVQFUGS5JXOUS" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/results/example/target-face.png?token=AGA77B7ZOLHRLBGU5W7IMUC5JXOPC" width="175">
+<img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/input-face.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/delta.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/combined-face.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/target-face.png" width="175">
 
 Input image on the left is detected as the target image on the right after the mask has been applied.
 
@@ -31,7 +31,7 @@ pip install -r requirements.txt
 from adversarial_face_recognition import *`
 ```
 
-For training instructions look at [`example.py`](https://github.com/392781/Face-Off/blob/master/example.py) to get started in less than 30 lines.
+For training instructions look at [`example.py`](https://github.com/392781/Face-Off/blob/master/examples/example.py) to get started in less than 30 lines.
 
 ## Usage
 The purpose of this library is to create adversarial attacks agains the FaceNet face recognizer.  This is the preliminary work towards creating a more robust physical attack using a mask that a person could wear over their face.
