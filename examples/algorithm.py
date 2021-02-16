@@ -11,17 +11,17 @@ imagize = transforms.ToPILImage()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
 ## Image preprocessing
-input_image_location =  './faces/input/ronald.jpg'
-target_image_location = './faces/target/chris.jpg'
-input_test_location =   './faces/input_tests/ronald2.jpg'
-target_test_location =  './faces/target_tests/chris2.jpg'
+input_image_location =  './examples/faces/input/ronald.jpg'
+target_image_location = './examples/faces/target/chris.jpg'
+input_test_location =   './examples/faces_tests/input_tests/ronald2.jpg'
+target_test_location =  './examples/faces_tests/target_tests/chris2.jpg'
 
 input_image = detect_face(input_image_location)[0]
 print("\nInput detected and aligned")
 target_image = detect_face(target_image_location)[0]
 print("Target detected and aligned")
-input_image.save('./results/example/input-face.png')
-target_image.save('./results/example/target-face.png')
+#input_image.save('./results/example/input-face.png')
+#target_image.save('./results/example/target-face.png')
 
 ## Mask creation
 mask = create_mask(input_image)[0]
@@ -90,10 +90,10 @@ print("\ninput img vs 2nd target", emb_distance(input_emb, test_emb).item())
 print("advrs img vs 2nd target", emb_distance(resnet(norm(apply(input_tensor, delta))), test_emb).item())
 
 ## Final results
-Image.fromarray(np.hstack(
-    (np.asarray(input_image.resize((300,300))), 
-     np.asarray(imagize(delta.detach()).resize((300,300))),
-     np.asarray(imagize((input_tensor + delta).detach()).resize((300,300))), 
-     np.asarray(target_image.resize((300,300)))))).show()
-imagize(delta.detach()).save('./results/example/delta.png')
-imagize((input_tensor + delta).detach()).save('./results/example/combined-face.png')
+# Image.fromarray(np.hstack(
+#     (np.asarray(input_image.resize((300,300))), 
+#      np.asarray(imagize(delta.detach()).resize((300,300))),
+#      np.asarray(imagize((input_tensor + delta).detach()).resize((300,300))), 
+#      np.asarray(target_image.resize((300,300)))))).show()
+# imagize(delta.detach()).save('./results/example/delta.png')
+# imagize((input_tensor + delta).detach()).save('./results/example/combined-face.png')
