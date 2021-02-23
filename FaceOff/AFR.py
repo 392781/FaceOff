@@ -1,46 +1,59 @@
 import os
 import re
-import face_recognition as fr
 import dlib
+import face_recognition as fr
 import numpy as np
-import random as r
 import torch as t
 from torchvision.transforms import Compose, Normalize, ToTensor, ToPILImage 
-#from torch import autograd
 from facenet_pytorch import InceptionResnetV1
 from PIL import Image, ImageDraw, ImageChops
 
-r.seed(1337)
+np.random.seed(1337)
 device = t.device('cuda:0' if t.cuda.is_available() else 'cpu')
 
 class Attack(object):
     def __init__(self, input_img, target_img, mask=None, optimizer='sgd', pretrained='vggface2'):
-        self.normalize = Compose([
-            ToTensor(),
-            Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225],
-            ),
-        ])
+        self.MEAN = t.tensor([0.485, 0.456, 0.406], device=device)
+        self.STD = t.tensor([0.229, 0.224, 0.225], device=device)
+
+        self.tensorize = ToTensor()
+        self.normalize = Normalize(mean=self.MEAN.numpy(), std=self.STD.numpy())
+        self.imageize = ToPILImage()
         
+        self.adversarial_emb = None
+
         self.input = input_img
         self.target = target_img
         self.mask = None
+        self.ref = None
         if (mask == None):
             self.mask = create_mask(self.input)
+            self.ref = self.mask
         else:
             self.mask = mask
+            self.ref = self.mask
 
         self.input_tensor = None
         self.input_emb = None
         self.target_emb = None
-        self.loss = None
+        self.loss = t.tensor(0)
 
         self.resnet = InceptionResnetV1(pretrained=pretrained).eval().to(device)
-
-        self.input_tensor = ToTensor()(self.input)
-        self.input_emb = self.resnet(t.stack([self.normalize(self.input)]))
-        self.target_emb = self.resnet(t.stack([self.normalize(self.target)]))
+        self.input_tensor = self.normalize(self.tensorize(self.input).to(device))
+        self.input_emb = self.resnet(
+            t.stack([
+                self.normalize(
+                    self.tensorize(self.input).to(device)
+                )]
+            )
+        )
+        self.target_emb = self.resnet(
+            t.stack([
+                self.normalize(
+                    self.tensorize(self.target).to(device)
+                )]
+            )
+        )
 
         try:
             if (optimizer == 'sgd'):
@@ -53,24 +66,33 @@ class Attack(object):
             print("Optimizer not supported, reverting to ADAM")
             self.opt = t.optim.Adam([self.mask], lr = 1e-1, weight_decay = 0.0001)
     
-    def train(self, epochs = 30):
+    def train(self, epochs = 30, norm=True):
         for i in range(epochs):
-            adversarial_input = self._apply(self.input_tensor, self.mask)
-            adversarial_emb = self.resnet(t.stack([adversarial_input]))
+            adversarial_input = self._apply(self.input_tensor, 
+                self.normalize(self.mask),
+                self.ref)
+            self.adversarial_emb = self.resnet(t.stack([adversarial_input]))
 
-            self.loss = (-emb_distance(adversarial_emb, self.input_emb)
-                        +emb_distance(adversarial_emb, self.target_emb))
-
+            self.loss = (-emb_distance(self.adversarial_emb, self.input_emb)
+                        +emb_distance(self.adversarial_emb, self.target_emb))
+    
             self.loss.backward(retain_graph=True)
             self.opt.step()
             self.opt.zero_grad()
 
+
             self.mask.data.clamp_(0,1)
             print(i,self.loss)
-        return adversarial_input.detach()
+            self.imageize(self._reverse_norm(adversarial_input).detach()).show()
+        #return adversarial_input.detach()
 
-    def _apply(self, image, mask):
-        return t.where((mask == 0), image, mask)
+    def _apply(self, image, mask, reference):
+        return t.where((reference == 0), image, mask)
+
+    def _reverse_norm(self, image_tensor):
+        MEAN = t.tensor([0.485, 0.456, 0.406])
+        STD = t.tensor([0.229, 0.224, 0.225])
+        return image_tensor * STD[:, None, None] + MEAN[:, None, None]
 
 
 def create_mask(face_image):
@@ -160,8 +182,8 @@ def detect_face(image_file_loc):
 
 
 def emb_distance(tensor_1, tensor_2):
-    tensor_1 = tensor_1
-    tensor_2 = tensor_2
+#    tensor_1 = tensor_1
+#    tensor_2 = tensor_2
     ten = (tensor_1 - tensor_2)
     return ten.norm()
 
@@ -190,15 +212,3 @@ def load_data(path_to_data):
         image_list.append(detect_face(loc))
 
     return image_list
-
-# Testing 
-
-inputs = load_data('./examples/faces/input/')
-
-test = Attack(inputs[0], inputs[1])
-x=test.train(5)
-
-
-
-
-
