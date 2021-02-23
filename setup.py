@@ -6,7 +6,7 @@ setup(
     description='Steps towards physical adversarial attacks on facial recognition',
     url='https://github.com/392781/FaceOff',
     author='Ronald Lencevičius',
-    license='GPL 3.0',
+    license='GNU General Public License v3 (GPLv3)',
     packages=['FaceOff'],
     install_requires=['torch==1.7.1',
                       'torchvision==0.8.2',
