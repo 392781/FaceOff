@@ -44,6 +44,19 @@ An image of this process can be seen below.
 
 <img src="https://raw.githubusercontent.com/392781/Face-Off/master/procedure.png">
 
+## Citation
+Please cite `FaceOff` if used in your research:
+
+```tex
+@misc{FaceOff,
+  author = {Ronald Lencevičius},
+  howpublished = {GitHub},
+  title = {Face-Off: Steps towards physical adversarial attacks on facial recognition},
+  URL = {https://github.com/392781/FaceOff},
+  year = {2019},
+}
+```
+
 ## References
 * Sharif, Mahmood, et al. "Accessorize to a crime: Real and stealthy attacks on state-of-the-art face recognition." Proceedings of the 2016 ACM SIGSAC Conference on Computer and Communications Security. ACM, 2016.
 * Wang, Mei, and Weihong Deng. "Deep face recognition: A survey." arXiv preprint arXiv:1804.06655 (2018).
