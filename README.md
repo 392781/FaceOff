@@ -1,7 +1,7 @@
-# Face-Off
+# FaceOff
 ### Steps towards physical adversarial attacks on facial recognition
 
-<img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/input-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/delta-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/combined-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/Face-Off/master/examples/faces/target-face-example.png" width="175">
+<img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/input-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/delta-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/combined-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/target-face-example.png" width="175">
 
 Input image on the left is detected as the target image on the right after the mask has been applied.
 
@@ -16,7 +16,7 @@ conda create -n facial pip
 2. Clone the repo 
 
 ```git
-git clone https://github.com/392781/Face-Off.git
+git clone https://github.com/392781/FaceOff.git
 ```
 
 3. Install the required libraries 
@@ -31,7 +31,7 @@ pip install -r requirements.txt
 from adversarial_face_recognition import *`
 ```
 
-For training instructions look at [`example.py`](https://github.com/392781/Face-Off/blob/master/examples/example.py) to get started in less than 30 lines.
+For training instructions look at [`example.py`](https://github.com/392781/FaceOff/blob/master/examples/example.py) to get started in less than 30 lines.
 
 ## Usage
 The purpose of this library is to create adversarial attacks agains the FaceNet face recognizer.  This is the preliminary work towards creating a more robust physical attack using a mask that a person could wear over their face.
@@ -42,10 +42,10 @@ The loss function maximizes the Euclidean distance between the inputs' true iden
 
 An image of this process can be seen below.
 
-<img src="https://raw.githubusercontent.com/392781/Face-Off/master/procedure.png">
+<img src="https://raw.githubusercontent.com/392781/FaceOff/master/procedure.png">
 
 ## Citation
-Please cite `Face-Off` if used in your research:
+Please cite `FaceOff` if used in your research:
 
 ```tex
 @misc{FaceOff,
