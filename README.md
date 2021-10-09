@@ -45,7 +45,7 @@ An image of this process can be seen below.
 <img src="https://raw.githubusercontent.com/392781/Face-Off/master/procedure.png">
 
 ## Citation
-Please cite `FaceOff` if used in your research:
+Please cite `Face-Off` if used in your research:
 
 ```tex
 @misc{FaceOff,
