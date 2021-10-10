@@ -33,7 +33,7 @@ An image of this process can be seen below.
 
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/procedure.png" width=45%>
+  <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/procedure.png" width=55%>
 </p>
 
 ## Installation
