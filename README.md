@@ -59,6 +59,7 @@ Please cite `FaceOff` if used in your research:
   howpublished = {GitHub},
   title = {Face-Off: Steps towards physical adversarial attacks on facial recognition},
   URL = {https://github.com/392781/FaceOff},
+  month = {Aug}
   year = {2019},
 }
 ```
