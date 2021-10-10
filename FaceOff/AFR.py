@@ -61,7 +61,7 @@ class Attack(object):
         # Function inits
         self.imageize = ToPILImage()
         self.tensorize = ToTensor()
-        self.normalize = Normalize(mean=self.MEAN.numpy(), std=self.STD.numpy())
+        self.normalize = Normalize(mean=self.MEAN.cpu().numpy(), std=self.STD.cpu().numpy())
         self.resnet = InceptionResnetV1(pretrained=pretrained).eval().to(device)
         
         # Training inputs

@@ -6,4 +6,6 @@ face_recognition_models
 cmake
 dlib
 numpy
+scipy
+pyparsing==2.2.1
 Pillow
