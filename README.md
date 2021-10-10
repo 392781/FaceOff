@@ -5,8 +5,37 @@
 
 Input image on the left is detected as the target image on the right after the mask has been applied.
 
+## Table of contents
+
+* [Table of contents](#table-of-contents)
+* [Description](#description)
+* [Installation](#installation)
+  + [Requirements](#requirements)
+  + [Instructions](#instructions)
+* [Citation](#citation)
+* [References](#references)
+
+## Description
+The purpose of this library is to create adversarial attacks agains the FaceNet face recognizer.  This is the preliminary work towards creating a more robust physical attack using a mask that a person could wear over their face.
+
+For more details, please check out my [research poster](https://github.com/392781/FaceOff/blob/master/rlencevicius_poster.pdf).
+
+The current pipeline consists of an aligned input image with a calculated mask.  This is then fed into a face detector using dlib's histogram of oriented gradients detector to test whether the face is still detected.  This is then passed to FaceNet where which ouputs a face embedding and a loss which is then calculated and propogated back.  This perturbs the input mask which generates enough of a disturbance to affect the loss.
+
+The loss function maximizes the Euclidean distance between the inputs' true identity and minimizes the distance between the adversarial input and the target image.
+
+An image of this process can be seen below.
+
+<img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/procedure.png">
 
 ## Installation
+
+### Requirements
+
+This project works on Linux (Ubuntu 20.04).  Windows and Mac are not supported but may work.
+
+### Instructions
+
 1. Create a virtual environment
 
 ```bash
@@ -38,19 +67,6 @@ from FaceOff.AFR import load_data, Attack
 ```
 
 For training instructions look at [`example.py`](https://github.com/392781/FaceOff/blob/master/examples/example.py) to get started in less than 30 lines.
-
-## Usage
-The purpose of this library is to create adversarial attacks agains the FaceNet face recognizer.  This is the preliminary work towards creating a more robust physical attack using a mask that a person could wear over their face.
-
-For more details, please check out my [research poster](https://github.com/392781/FaceOff/blob/master/rlencevicius_poster.pdf).
-
-The current pipeline consists of an aligned input image with a calculated mask.  This is then fed into a face detector using dlib's histogram of oriented gradients detector to test whether the face is still detected.  This is then passed to FaceNet where which ouputs a face embedding and a loss which is then calculated and propogated back.  This perturbs the input mask which generates enough of a disturbance to affect the loss.
-
-The loss function maximizes the Euclidean distance between the inputs' true identity and minimizes the distance between the adversarial input and the target image.
-
-An image of this process can be seen below.
-
-<img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/procedure.png">
 
 ## Citation
 Please cite `FaceOff` if used in your research:
