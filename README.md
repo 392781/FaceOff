@@ -48,6 +48,7 @@ This project works on Linux (Ubuntu 20.04).  Windows and Mac are not supported b
 
 ```bash
 conda create -n facial_recognition python=3.8.5
+conda activate facial_recognition
 ```
 
 2. Clone the repo 
