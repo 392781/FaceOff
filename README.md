@@ -1,7 +1,12 @@
 # FaceOff
 ### Steps towards physical adversarial attacks on facial recognition
 
-<img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/input-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/delta-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/combined-face-example.png" width="175"> <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/target-face-example.png" width="175">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/input-face-example.png" width="175"> 
+  <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/delta-example.png" width="175"> 
+  <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/combined-face-example.png" width="175"> 
+  <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/faces/target-face-example.png" width="175">
+</p>
 
 Input image on the left is detected as the target image on the right after the mask has been applied.
 
@@ -26,7 +31,10 @@ The loss function maximizes the Euclidean distance between the inputs' true iden
 
 An image of this process can be seen below.
 
-<img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/procedure.png">
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/procedure.png" width=45%>
+</p>
 
 ## Installation
 
