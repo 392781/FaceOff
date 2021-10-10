@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='FaceOff',
-    version='0.0.1',    
+    version='0.0.0',    
     description='Steps towards physical adversarial attacks on facial recognition',
     url='https://github.com/392781/FaceOff',
     author='Ronald Lencevičius',
@@ -12,6 +12,7 @@ setup(
                       'torchvision==0.8.2',
                       'facenet-pytorch==2.5.1',
                       'face_recognition',
+                      'face_recognition_models',
                       'cmake',
                       'dlib',
                       'numpy',
