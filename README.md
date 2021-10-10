@@ -10,7 +10,7 @@ Input image on the left is detected as the target image on the right after the m
 1. Create a virtual environment
 
 ```bash
-conda create -n facial pip
+conda create -n facial_recognition python=3.8.5
 ```
 
 2. Clone the repo 
@@ -25,10 +25,16 @@ git clone https://github.com/392781/FaceOff.git
 pip install -r requirements.txt
 ```
 
-4. Import and use!
+4. Install FaceOff from inside the folder where `setup.py` is located
+
+```bash
+pip install .
+```
+
+5. Import and use!
 
 ```python
-from adversarial_face_recognition import *`
+from FaceOff.AFR import load_data, Attack
 ```
 
 For training instructions look at [`example.py`](https://github.com/392781/FaceOff/blob/master/examples/example.py) to get started in less than 30 lines.
@@ -42,7 +48,7 @@ The loss function maximizes the Euclidean distance between the inputs' true iden
 
 An image of this process can be seen below.
 
-<img src="https://raw.githubusercontent.com/392781/FaceOff/master/procedure.png">
+<img src="https://raw.githubusercontent.com/392781/FaceOff/master/examples/procedure.png">
 
 ## Citation
 Please cite `FaceOff` if used in your research:
