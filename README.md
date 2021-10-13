@@ -66,7 +66,7 @@ pip install -r requirements.txt
 4. Install FaceOff from inside the folder where `setup.py` is located
 
 ```bash
-pip install .
+pip install -e .
 ```
 
 5. Import and use!
