@@ -21,11 +21,11 @@ Input image on the left is detected as the target image on the right after the m
 * [References](#references)
 
 ## Description
-The purpose of this library is to create adversarial attacks agains the FaceNet face recognizer.  This is the preliminary work towards creating a more robust physical attack using a mask that a person could wear over their face.
+The purpose of this library is to create adversarial attacks against the FaceNet face recognizer.  This is the preliminary work towards creating a more robust physical attack using a mask that a person could wear over their face.
 
 For more details, please check out my [research poster](https://github.com/392781/FaceOff/blob/master/rlencevicius_poster.pdf).
 
-The current pipeline consists of an aligned input image with a calculated mask.  This is then fed into a face detector using dlib's histogram of oriented gradients detector to test whether the face is still detected.  This is then passed to FaceNet where which ouputs a face embedding and a loss which is then calculated and propogated back.  This perturbs the input mask which generates enough of a disturbance to affect the loss.
+The current pipeline consists of an aligned input image with a calculated mask.  This is then fed into a face detector using dlib's histogram of oriented gradients detector to test whether the face is still detected.  This is then passed to FaceNet where which ouputs a face embedding and a loss which is then calculated and propagated back.  This perturbs the input mask which generates enough of a disturbance to affect the loss.
 
 The loss function maximizes the Euclidean distance between the inputs' true identity and minimizes the distance between the adversarial input and the target image.
 
