@@ -93,7 +93,7 @@ Please cite `FaceOff` if used in your research:
 
 ```tex
 @misc{FaceOff,
-  author = {Ronald Lencevičius},
+  author = {Ronaldas Paulius Lencevicius},
   howpublished = {GitHub},
   title = {Face-Off: Steps towards physical adversarial attacks on facial recognition},
   URL = {https://github.com/392781/FaceOff},
