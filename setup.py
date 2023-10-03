@@ -8,7 +8,7 @@ setup(
     author='Ronald Lencevičius',
     license='GNU General Public License v3 (GPLv3)',
     packages=['FaceOff'],
-    install_requires=['torch==1.7.1',
+    install_requires=['torch==1.13.1',
                       'torchvision==0.8.2',
                       'facenet-pytorch==2.5.1',
                       'face_recognition',
